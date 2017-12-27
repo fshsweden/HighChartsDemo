@@ -1,0 +1,219 @@
+<html>
+
+<head>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+    <style type="text/css">
+        #container {
+            min-width: 310px;
+            max-width: 800px;
+            height: 400px;
+            margin: 0 auto
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div id="container">
+        <div id="container1"></div>
+        <div id="container2" style="height:200px"></div>
+    </div>
+
+
+    <script type="text/javascript">
+        /*
+        The purpose of this demo is to demonstrate how multiple charts on the same page can be linked
+        through DOM and Highcharts events and API methods. It takes a standard Highcharts config with a
+        small variation for each data set, and a mouse/touch event handler to bind the charts together.
+        */
+
+
+
+        /**
+         * In order to synchronize tooltips and crosshairs, override the
+         * built-in events with handlers defined on the parent element.
+         */
+        $('#container').bind('mousemove touchmove touchstart', function (e) {
+            
+            var chart,
+                point,
+                i,
+                event;
+
+            for (i = 0; i < Highcharts.charts.length; i = i + 1) {
+            
+                chart = Highcharts.charts[i];
+                event = chart.pointer.normalize(e.originalEvent); // Find coordinates within the chart
+                point = chart.series[0].searchPoint(event, true); // Get the hovered point
+
+                if (point) {
+                    point.highlight(e);
+                }
+            }
+        });
+
+        /**
+         * Override the reset function, we don't need to hide the tooltips and crosshairs.
+         */
+        Highcharts.Pointer.prototype.reset = function () {
+            return undefined;
+        };
+
+        /**
+         * Highlight a point by showing tooltip, setting hover state and draw crosshair
+         */
+        Highcharts.Point.prototype.highlight = function (event) {
+            this.onMouseOver(); // Show the hover marker
+            this.series.chart.tooltip.refresh(this); // Show the tooltip
+            this.series.chart.xAxis[0].drawCrosshair(event, this); // Show the crosshair
+        };
+
+        /**
+         * Synchronize zooming through the setExtremes event handler.
+         */
+        function syncExtremes(e) {
+            var thisChart = this.chart;
+
+            console.log(e);
+
+            if (e.trigger !== 'syncExtremes') { // Prevent feedback loop
+                Highcharts.each(Highcharts.charts, function (chart) {
+                    if (chart !== thisChart) {
+                        if (chart.xAxis[0].setExtremes) { // It is null while updating
+                            chart.xAxis[0].setExtremes(e.min, e.max, undefined, false, { trigger: 'syncExtremes' });
+                        }
+                    }
+                });
+            }
+        }
+
+        Highcharts.chart('container1', {
+
+            title: {
+                text: 'Solar Employment Growth by Sector, 2010-2016'
+            },
+
+            subtitle: {
+                text: 'Source: thesolarfoundation.com'
+            },
+
+            yAxis: {
+                title: {
+                    text: 'Number of Employees'
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+
+            plotOptions: {
+                series: {
+                    label: {
+                        connectorAllowed: false
+                    },
+                    pointStart: 2010
+                }
+            },
+
+            series: [{
+                name: 'Installation',
+                data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+            }, {
+                name: 'Manufacturing',
+                data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
+            }, {
+                name: 'Sales & Distribution',
+                data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
+            }, {
+                name: 'Project Development',
+                data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
+            }, {
+                name: 'Other',
+                data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
+            }],
+
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 500
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+
+        });
+
+
+
+        Highcharts.chart('container2', {
+
+            chart: {
+                zoomType: 'xy'
+            },
+            title: {
+                text: null
+            },
+
+            subtitle: {
+                text: null
+            },
+
+            yAxis: {
+                title: {
+                    text: 'Number of Employees'
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+
+            plotOptions: {
+                series: {
+                    label: {
+                        connectorAllowed: false
+                    },
+                    pointStart: 2010
+                }
+            },
+
+            series: [{
+                name: 'Installation',
+                data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+            }],
+
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 500
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>
